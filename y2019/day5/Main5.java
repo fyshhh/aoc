@@ -10,7 +10,7 @@ public class Main5 {
 //                1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,
 //                999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99});
         IntCode intCode = new IntCode().initialiseFromPath("y2019/day5/input.txt");
-        intCode.process();
+        intCode.iterate();
     }
 
 }

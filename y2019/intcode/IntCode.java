@@ -3,8 +3,10 @@ package y2019.intcode;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
@@ -13,11 +15,24 @@ import java.util.stream.IntStream;
 
 public class IntCode {
 
+    enum Status {
+        INITIALIZED, NEED_INPUT, COMPLETED;
+    }
+
     Scanner sc = new Scanner(System.in);
-    Map<Integer, Integer> program;
+    boolean printIO = true;
+    List<Integer> inputs = new ArrayList<>();
+    List<Integer> outputs = new ArrayList<>();
+
+    private int index = 0;
+    private Map<Integer, Integer> program = new HashMap<>();
+    private Status status = Status.INITIALIZED;
 
     public IntCode() {
-        program = new HashMap<>();
+    }
+
+    public IntCode(boolean printIO) {
+        this.printIO = printIO;
     }
 
     public IntCode initialiseFromArr(int[] arr) {      // for test cases
@@ -48,101 +63,121 @@ public class IntCode {
         return this;
     }
 
-    public IntCode rewrite(int index, int value) {
-        assert program != null;
-        program.put(index, value);
+    public IntCode addInputs(List<Integer> inputs) {
+        this.inputs.addAll(inputs);
         return this;
     }
 
-    private int getWithMode(int index, int mode) {
-        return mode == 0
-            ? program.get(index)   // position mode
-            : index;               // immediate mode
+    public int mode(int index, int mode) {
+        return mode == 0 ? program.get(index) : index;
     }
 
-    private int iterate(int index) {    // performs one iteration
-        int code = program.get(index);
-        int op = code % 100;
-        int modes = code / 100;
-        int mode1 = modes % 10;
-        int mode2 = (modes / 10) % 10;
-        int mode3 = modes / 100;
+    public IntCode iterate() {    // performs iterations until it should stop
+        while (true) {
+            int code = program.get(index);
+            int op = code % 100;
+            int modes = code / 100;
+            int mode1 = modes % 10;
+            int mode2 = (modes / 10) % 10;
+            int mode3 = modes / 100;
 
-        assert (mode1 == 0 || mode1 == 1) : String.format("mode1 is %d", mode1);
-        assert (mode2 == 0 || mode2 == 1) : String.format("mode2 is %d", mode2);
-        assert (mode3 == 0 || mode3 == 1) : String.format("mode3 is %d", mode3);
+            assert (mode1 == 0 || mode1 == 1) : String.format("mode1 is %d", mode1);
+            assert (mode2 == 0 || mode2 == 1) : String.format("mode2 is %d", mode2);
+            assert (mode3 == 0 || mode3 == 1) : String.format("mode3 is %d", mode3);
 
-        switch (op) {
+            switch (op) {
 
-        case 1:
-            program.put(getWithMode(index + 3, mode3),
-                    program.get(getWithMode(index + 1, mode1))
-                            + program.get(getWithMode(index + 2, mode2)));
-            return index + 4;
+            case 1:
+                program.put(mode(index + 3, mode3),
+                        program.get(mode(index + 1, mode1))
+                                + program.get(mode(index + 2, mode2)));
+                index += 4;
+                break;
 
-        case 2:
-            program.put(getWithMode(index + 3, mode3),
-                    program.get(getWithMode(index + 1, mode1))
-                            * program.get(getWithMode(index + 2, mode2)));
-            return index + 4;
+            case 2:
+                program.put(mode(index + 3, mode3),
+                        program.get(mode(index + 1, mode1))
+                                * program.get(mode(index + 2, mode2)));
+                index += 4;
+                break;
 
-        case 3:
-            System.out.print("Input requested: ");
-            program.put(getWithMode(index + 1, mode1), sc.nextInt());
-            return index + 2;
+            case 3:
+                if (printIO) {
+                    System.out.print("Input requested: ");
+                    program.put(mode(index + 1, mode1), sc.nextInt());
+                } else {
+                    if (inputs.size() > 0) {
+                        int input = inputs.remove(0);
+                        System.out.printf("Input requested: %d\n", input);
+                        program.put(mode(index + 1, mode1), input);
+                    } else {
+                        status = Status.NEED_INPUT;
+                        return this;
+                    }
+                }
+                index += 2;
+                break;
 
-        case 4:
-            System.out.printf("Output printed: %d\n", program.get(getWithMode(index + 1, mode1)));
-            return index + 2;
+            case 4:
+                if (printIO) {
+                    System.out.printf("Output printed: %d\n", program.get(mode(index + 1, mode1)));
+                } else {
+                    int output = program.get(mode(index + 1, mode1));
+                    System.out.printf("Output printed: %d\n", output);
+                    outputs.add(output);
+                }
+                index += 2;
+                break;
 
-        case 5:
-            return program.get(getWithMode(index + 1, mode1)) != 0
-                    ? program.get(getWithMode(index + 2, mode2))
-                    : index + 3;
+            case 5:
+                index = program.get(mode(index + 1, mode1)) != 0
+                        ? program.get(mode(index + 2, mode2))
+                        : index + 3;
+                break;
 
-        case 6:
-            return program.get(getWithMode(index + 1, mode1)) == 0
-                    ? program.get(getWithMode(index + 2, mode2))
-                    : index + 3;
+            case 6:
+                index = program.get(mode(index + 1, mode1)) == 0
+                        ? program.get(mode(index + 2, mode2))
+                        : index + 3;
+                break;
 
-        case 7:
-            program.put(getWithMode(index + 3, mode3),
-                    program.get(getWithMode(index + 1, mode1)) < program.get(getWithMode(index + 2, mode2))
-                            ? 1
-                            : 0);
-            return index + 4;
+            case 7:
+                program.put(mode(index + 3, mode3),
+                        program.get(mode(index + 1, mode1))
+                                < program.get(mode(index + 2, mode2))
+                                ? 1
+                                : 0);
+                index += 4;
+                break;
 
-        case 8:
-            program.put(getWithMode(index + 3, mode3),
-                    program.get(getWithMode(index + 1, mode1)).equals(program.get(getWithMode(index + 2, mode2)))
-                            ? 1
-                            : 0);
-            return index + 4;
+            case 8:
+                program.put(mode(index + 3, mode3),
+                        program.get(mode(index + 1, mode1))
+                                .equals(program.get(mode(index + 2, mode2)))
+                                ? 1
+                                : 0);
+                index += 4;
+                break;
 
-        case 99:
-            System.out.println("Program completed successfully.");
-            return -1;
+            case 99:
+                System.out.println("Program completed successfully.");
+                index = -1;
+                status = Status.COMPLETED;
+                return this;
 
-        default:
-            System.out.printf("Error encountered at index %d, retrieving value %d.\n", index, code);
-            return -2;
+            default:
+                throw new UnsupportedOperationException(String.format("Unexpected opcode at index %d: %d", index, code));
 
+            }
         }
     }
 
-    public void process() {    // performs iterations until it halts
-        int index = 0;
-        while (index >= 0) {
-            index = iterate(index);
-        }
+    public int getLast() {
+        return outputs.get(outputs.size() - 1);
     }
 
-    public int get(int index) {
-        return program.get(index);
-    }
-
-    public void display(int index) {
-        System.out.println(get(index));
+    public boolean isCompleted() {
+        return status == Status.COMPLETED;
     }
 
     public void print() {
