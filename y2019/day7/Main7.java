@@ -82,7 +82,7 @@ public class Main7 {
                 return this;
             }
 
-            int process() {
+            long process() {
                 intCode.iterate();
                 return intCode.getLast();
             }
@@ -109,7 +109,7 @@ public class Main7 {
 
         int process(List<Integer> inputs) {     // processes one loop
             return mapInputs(inputs).stream()
-                    .reduce(0, (out, amp) -> amp.addInputs(List.of(out)).process(), (out, amp) -> out);
+                    .reduce(0, (out, amp) -> Math.toIntExact(amp.addInputs(List.of(out)).process()), (out, amp) -> out);
         }
 
         int highest(List<Integer> inputs) {
@@ -125,7 +125,7 @@ public class Main7 {
             int output = 0;
             while (!queue.isEmpty()) {
                 Amplifier amp = queue.poll().addInputs(List.of(output));
-                output = amp.process();
+                output = (int) amp.process();
                 if (!amp.intCode.isCompleted()) {
                     queue.add(amp);
                 }

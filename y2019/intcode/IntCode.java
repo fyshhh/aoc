@@ -21,11 +21,12 @@ public class IntCode {
 
     Scanner sc = new Scanner(System.in);
     boolean printIO = true;
-    List<Integer> inputs = new ArrayList<>();
-    List<Integer> outputs = new ArrayList<>();
+    List<Long> inputs = new ArrayList<>();
+    List<Long> outputs = new ArrayList<>();
 
-    private int index = 0;
-    private Map<Integer, Integer> program = new HashMap<>();
+    private long index = 0;
+    private long relative = 0;
+    private Map<Long, Long> program = new HashMap<>();
     private Status status = Status.INITIALIZED;
 
     public IntCode() {
@@ -35,11 +36,11 @@ public class IntCode {
         this.printIO = printIO;
     }
 
-    public IntCode initialiseFromArr(int[] arr) {      // for test cases
+    public IntCode initialiseFromArr(long[] arr) {      // for test cases
         program = IntStream.range(0, arr.length)
                 .boxed()
                 .collect(Collectors.toMap(
-                        Function.identity(),
+                        i -> (long) i,
                         i -> arr[i],
                         (a, b) -> a,        // BiFunction implementation unnecessary as there are no collisions
                         HashMap::new));
@@ -49,13 +50,13 @@ public class IntCode {
     public IntCode initialiseFromPath(String filePath) {   // for input.txt
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
-            int[] arr = Arrays.stream(reader.readLine().split(","))
-                    .mapToInt(Integer::parseInt)
+            long[] arr = Arrays.stream(reader.readLine().split(","))
+                    .mapToLong(Long::parseLong)
                     .toArray();
             program = IntStream.range(0, arr.length)
                     .boxed()
                     .collect(Collectors.toMap(
-                            Function.identity(),
+                            i -> (long) i,
                             i -> arr[i],
                             (a, b) -> a,    // BiFunction implementation unnecessary as there are no collisions
                             HashMap::new));
@@ -64,17 +65,31 @@ public class IntCode {
     }
 
     public IntCode addInputs(List<Integer> inputs) {
-        this.inputs.addAll(inputs);
+        inputs.forEach(i -> this.inputs.add((long) i));
         return this;
     }
 
-    public int mode(int index, int mode) {
-        return mode == 0 ? program.get(index) : index;
+    public long mode(long index, int mode) {
+        switch (mode) {
+
+        case 0:     // parameter mode
+            return program.getOrDefault(index, 0L);
+
+        case 1:     // immediate mode
+            return index;
+
+        case 2:     // relative mode
+            return relative + program.getOrDefault(index, 0L);
+
+        default:
+            return -1;
+
+        }
     }
 
     public IntCode iterate() {    // performs iterations until it should stop
         while (true) {
-            int code = program.get(index);
+            int code = Math.toIntExact(program.get(index));
             int op = code % 100;
             int modes = code / 100;
             int mode1 = modes % 10;
@@ -87,27 +102,27 @@ public class IntCode {
 
             switch (op) {
 
-            case 1:
+            case 1:         // add
                 program.put(mode(index + 3, mode3),
-                        program.get(mode(index + 1, mode1))
-                                + program.get(mode(index + 2, mode2)));
+                        program.getOrDefault(mode(index + 1, mode1), 0L)
+                                + program.getOrDefault(mode(index + 2, mode2), 0L));
                 index += 4;
                 break;
 
-            case 2:
+            case 2:         // multiply
                 program.put(mode(index + 3, mode3),
-                        program.get(mode(index + 1, mode1))
-                                * program.get(mode(index + 2, mode2)));
+                        program.getOrDefault(mode(index + 1, mode1), 0L)
+                                * program.getOrDefault(mode(index + 2, mode2), 0L));
                 index += 4;
                 break;
 
-            case 3:
+            case 3:         // read input
                 if (printIO) {
                     System.out.print("Input requested: ");
-                    program.put(mode(index + 1, mode1), sc.nextInt());
+                    program.put(mode(index + 1, mode1), sc.nextLong());
                 } else {
                     if (inputs.size() > 0) {
-                        int input = inputs.remove(0);
+                        long input = inputs.remove(0);
                         System.out.printf("Input requested: %d\n", input);
                         program.put(mode(index + 1, mode1), input);
                     } else {
@@ -118,48 +133,53 @@ public class IntCode {
                 index += 2;
                 break;
 
-            case 4:
+            case 4:         // write output
+                long output = program.getOrDefault(mode(index + 1, mode1), 0L);
                 if (printIO) {
-                    System.out.printf("Output printed: %d\n", program.get(mode(index + 1, mode1)));
-                } else {
-                    int output = program.get(mode(index + 1, mode1));
                     System.out.printf("Output printed: %d\n", output);
+                } else {
+//                    System.out.printf("Output printed: %d\n", output);
                     outputs.add(output);
                 }
                 index += 2;
                 break;
 
-            case 5:
-                index = program.get(mode(index + 1, mode1)) != 0
-                        ? program.get(mode(index + 2, mode2))
+            case 5:         // jump-if-eq
+                index = program.getOrDefault(mode(index + 1, mode1), 0L) != 0
+                        ? program.getOrDefault(mode(index + 2, mode2), 0L)
                         : index + 3;
                 break;
 
-            case 6:
-                index = program.get(mode(index + 1, mode1)) == 0
-                        ? program.get(mode(index + 2, mode2))
+            case 6:         // jump-if-neq
+                index = program.getOrDefault(mode(index + 1, mode1), 0L) == 0
+                        ? program.getOrDefault(mode(index + 2, mode2), 0L)
                         : index + 3;
                 break;
 
-            case 7:
+            case 7:         // write-if-less
                 program.put(mode(index + 3, mode3),
-                        program.get(mode(index + 1, mode1))
-                                < program.get(mode(index + 2, mode2))
-                                ? 1
-                                : 0);
+                        program.getOrDefault(mode(index + 1, mode1), 0L)
+                                < program.getOrDefault(mode(index + 2, mode2), 0L)
+                                ? 1L
+                                : 0L);
                 index += 4;
                 break;
 
-            case 8:
+            case 8:         // write-if-eq
                 program.put(mode(index + 3, mode3),
-                        program.get(mode(index + 1, mode1))
-                                .equals(program.get(mode(index + 2, mode2)))
-                                ? 1
-                                : 0);
+                        program.getOrDefault(mode(index + 1, mode1), 0L)
+                                .equals(program.getOrDefault(mode(index + 2, mode2), 0L))
+                                ? 1L
+                                : 0L);
                 index += 4;
                 break;
 
-            case 99:
+            case 9:         // adjust relative
+                relative += program.getOrDefault(mode(index + 1, mode1), 0L);
+                index += 2;
+                break;
+
+            case 99:        // done!
                 System.out.println("Program completed successfully.");
                 index = -1;
                 status = Status.COMPLETED;
@@ -172,7 +192,11 @@ public class IntCode {
         }
     }
 
-    public int getLast() {
+    public List<Long> getOutputs() {
+        return outputs;
+    }
+
+    public long getLast() {
         return outputs.get(outputs.size() - 1);
     }
 
