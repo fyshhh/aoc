@@ -21,6 +21,7 @@ public class IntCode {
 
     Scanner sc = new Scanner(System.in);
     boolean printIO = true;
+    boolean printToUser = false;
     List<Long> inputs = new ArrayList<>();
     List<Long> outputs = new ArrayList<>();
 
@@ -61,6 +62,11 @@ public class IntCode {
                             (a, b) -> a,    // BiFunction implementation unnecessary as there are no collisions
                             HashMap::new));
         } catch (IOException ignored) { }
+        return this;
+    }
+
+    public IntCode setPrintToUser(boolean b) {
+        this.printToUser = b;
         return this;
     }
 
@@ -123,7 +129,9 @@ public class IntCode {
                 } else {
                     if (inputs.size() > 0) {
                         long input = inputs.remove(0);
-                        System.out.printf("Input requested: %d\n", input);
+                        if (printToUser) {
+                            System.out.printf("Input requested: %d\n", input);
+                        }
                         program.put(mode(index + 1, mode1), input);
                     } else {
                         status = Status.NEED_INPUT;
@@ -138,7 +146,9 @@ public class IntCode {
                 if (printIO) {
                     System.out.printf("Output printed: %d\n", output);
                 } else {
-//                    System.out.printf("Output printed: %d\n", output);
+                    if (printToUser) {
+                        System.out.printf("Output printed: %d\n", output);
+                    }
                     outputs.add(output);
                 }
                 index += 2;
