@@ -13,6 +13,11 @@ public class Pair<T, U> {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Pair && fst.equals(((Pair) obj).fst) && snd.equals(((Pair) obj).snd);
+    }
+
+    @Override
     public String toString() {
         return String.format("[%s, %s]", fst, snd);
     }
