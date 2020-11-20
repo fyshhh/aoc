@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -20,7 +19,7 @@ public class IntCode {
     }
 
     Scanner sc = new Scanner(System.in);
-    boolean printIO = true;
+    boolean userInput = true;
     boolean printToUser = false;
     List<Long> inputs = new ArrayList<>();
     List<Long> outputs = new ArrayList<>();
@@ -33,8 +32,8 @@ public class IntCode {
     public IntCode() {
     }
 
-    public IntCode(boolean printIO) {
-        this.printIO = printIO;
+    public IntCode(boolean userInput) {
+        this.userInput = userInput;
     }
 
     public IntCode initialiseFromArr(long[] arr) {      // for test cases
@@ -123,7 +122,7 @@ public class IntCode {
                 break;
 
             case 3:         // read input
-                if (printIO) {
+                if (userInput) {
                     System.out.print("Input requested: ");
                     program.put(mode(index + 1, mode1), sc.nextLong());
                 } else {
@@ -143,14 +142,10 @@ public class IntCode {
 
             case 4:         // write output
                 long output = program.getOrDefault(mode(index + 1, mode1), 0L);
-                if (printIO) {
+                if (printToUser) {
                     System.out.printf("Output printed: %d\n", output);
-                } else {
-                    if (printToUser) {
-                        System.out.printf("Output printed: %d\n", output);
-                    }
-                    outputs.add(output);
                 }
+                outputs.add(output);
                 index += 2;
                 break;
 
