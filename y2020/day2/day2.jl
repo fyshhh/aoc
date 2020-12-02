@@ -14,6 +14,7 @@ function partone()
             total += 1
         end
     end
+    close(io)
     println(total)
     return nothing
 end
@@ -29,6 +30,7 @@ function parttwo()
             total += 1
         end
     end
+    close(io)
     println(total)
     return nothing
 end
