@@ -47,7 +47,7 @@ public class Main2 {
     }
 
     public static void main(String[] args) {
-        String filePath = "y2020/day2/input.txt";
+        String filePath = "y2020/day2/input.in";
         execute(filePath);
     }
 

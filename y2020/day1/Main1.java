@@ -1,6 +1,5 @@
 package y2020.day1;
 
-import resource.Pair;
 import resource.PathReader;
 
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class Main1 {
     }
 
     public static void main(String[] args) {
-        String filePath = "y2020/day1/input.txt";
+        String filePath = "y2020/day1/input.in";
         findEntryPair(filePath);    // part one
         findEntryTriplet(filePath); // part two
     }
