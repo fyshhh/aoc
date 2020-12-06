@@ -4,10 +4,6 @@ import resource.Pair;
 import resource.PathReader;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -68,7 +64,6 @@ public class Main5 {
     public static void main(String[] args) {
         String filePath = "y2020/day5/input.in";
         parseFilepath(filePath);
-//        System.out.println(Objects.equals(new Pair<>(71, 2), new Pair<>(71, 2)));
     }
 
 }
