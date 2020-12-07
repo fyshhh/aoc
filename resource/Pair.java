@@ -2,6 +2,8 @@ package resource;
 
 // generic pair class
 
+import java.util.Objects;
+
 public class Pair<T, U> {
 
     public T fst;
@@ -14,7 +16,12 @@ public class Pair<T, U> {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof Pair && fst.equals(((Pair) obj).fst) && snd.equals(((Pair) obj).snd);
+        return obj instanceof Pair<?, ?> && fst.equals(((Pair<?, ?>) obj).fst) && snd.equals(((Pair<?, ?>) obj).snd);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fst, snd);
     }
 
     @Override
