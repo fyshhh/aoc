@@ -4,18 +4,14 @@ end
 
 function partone(vec::Vector{Int})::Int
     for i in 26:length(vec)
-        valid = false
-        for j in i-25:i-1, k in i-25:i-1
-            if ((j != k) && (vec[i] == vec[j] + vec[k]))
-                valid = true
-            end
-        end
-        if !valid
+        if !([(j, k) for j=i-25:i-1 for k=j:i-1] |>
+            a -> mapreduce(t -> vec[i] == vec[t[1]] + vec[t[2]], |, a))
             flush(stdout)
             println(vec[i])
             return i
         end
     end
+    return 1
 end
 
 function parttwo(vec::Vector{Int}, ind::Int)::Nothing
