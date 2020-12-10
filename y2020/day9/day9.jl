@@ -4,8 +4,7 @@ end
 
 function partone(vec::Vector{Int})::Int
     for i in 26:length(vec)
-        if !([(j, k) for j=i-25:i-1 for k=j:i-1] |>
-            a -> mapreduce(t -> vec[i] == vec[t[1]] + vec[t[2]], |, a))
+        if !([(j, k) for j=i-25:i-1 for k=j:i-1] |> a -> mapreduce(t -> vec[i] == vec[t[1]] + vec[t[2]], |, a))
             flush(stdout)
             println(vec[i])
             return i
