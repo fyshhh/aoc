@@ -26,6 +26,8 @@ function partone(vec::Vector{String})
 
 end
 
+# the more i write this, the more i suspect it's definitely doable with julia's linear algebra implementation, with memoized
+# array multipliers; this might be faster since new CI objects need not be created... more experimentation is required
 function parttwo(vec::Vector{String})
 
     movarr = Dict{String, CartesianIndex}("N" => CartesianIndex(0, 1), "E" => CartesianIndex(1, 0),
