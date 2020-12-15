@@ -4,31 +4,33 @@ end
 
 function recite(vec::Vector{Int}, val::Int)
 
-    dict = Dict{Int, Vector{Int}}()
-    nums = Vector{Int}(undef, val)
+    dict = Dict{Int, Pair{Int, Int}}()
+    curr = 0
+    prev = 0
 
-    for i in eachindex(nums)
+    for i in 1:val
         if i <= length(vec)
-            nums[i] = vec[i]
-        elseif dict[nums[i - 1]] |> length == 1
-            nums[i] = 0
+            curr = vec[i]
+        elseif dict[prev].first == 0
+            curr = 0
         else
-            nums[i] = last(dict[nums[i - 1]]) - dict[nums[i - 1]][length(dict[nums[i - 1]]) - 1]
+            curr = dict[prev] |> p -> p.second - p.first
         end
 
-        if haskey(dict, nums[i])
-            push!(dict[nums[i]], i)
+        if haskey(dict, curr)
+            dict[curr] = dict[curr].second => i
         else
-            dict[nums[i]] = [i]
+            dict[curr] = 0 => i
         end
 
+        prev = curr
     end
 
     flush(stdout)
-    nums[val] |> println
+    curr |> println
 
 end
 
 inp = parseinput()
 recite(inp, 2020)
-recite(inp, 30000000)           # i'm not proud of how long this takes so i'm going to try to reduce it
+recite(inp, 30000000)           # around 3 seconds but idk how to make it faster
